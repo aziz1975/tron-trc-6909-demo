@@ -25,7 +25,9 @@ Gold explicitly uses `_setDecimals(GOLD, 6)`: `1000000` units represent one gold
 
 There is no ongoing minting, burning, or metadata editing through the public API. Swords are interchangeable units of token ID `1`; individual swords do not have unique IDs. Unknown IDs return empty names and symbols, zero decimals, and zero balances. This contract cannot mint them after construction.
 
-### Permissions
+### Contract permissions
+
+These methods are inherited from OpenZeppelin. The walkthrough exercises `transfer`, `approve`, and `transferFrom`. It does **not** call `setOperator`; it only reads `isOperator(A, B)` to confirm B has no operator access before testing allowances.
 
 | Action | Scope | Effect |
 | --- | --- | --- |
@@ -35,7 +37,7 @@ There is no ongoing minting, burning, or metadata editing through the public API
 | `setOperator(spender, true)` | All IDs owned by the caller | Authorizes transfers without consuming per-token allowances |
 | `setOperator(spender, false)` | All IDs owned by the caller | Revokes operator status; existing allowances remain |
 
-A finite allowance decreases when spent; the maximum `uint256` allowance remains unchanged. A sword allowance cannot authorize a gold transfer.
+The walkthrough verifies that a finite sword allowance decreases when spent and prevents spending beyond the remaining amount. The inherited contract also supports unlimited allowances and separate permissions per token ID; those behaviors are not tested by this script.
 
 ## Choose a workflow
 
@@ -141,19 +143,20 @@ The fee limit in `tronbox-config.js` is `1000000000` SUN (1,000 TRX) per transac
 
 See [scripts/test-nile-deployed.js](scripts/test-nile-deployed.js) for the standalone TronWeb walkthrough. It signs holder calls with `PRIVATE_KEY_NILE` and delegated calls with `PRIVATE_KEY_NILE_SPENDER`. The spender is also the recipient.
 
-Amounts are passed as strings in the smallest token unit. For example, transferring 25 gold uses `transfer(receiver, 0, '25000000')`; approving two swords uses `approve(spender, 1, '2')`. Delegated transfers use `transferFrom(holder, receiver, id, amount)`. The contract also supports operator access through `setOperator(spender, true)` and revocation through `setOperator(spender, false)`. The walkthrough does not test these calls; it requires the spender to start without operator access.
+Amounts are passed as strings in the smallest token unit. For example, transferring 25 gold uses `transfer(receiver, 0, '25000000')`; approving two swords uses `approve(spender, 1, '2')`. Delegated transfers use `transferFrom(holder, receiver, id, amount)`.
 
-A transaction ID means the transaction was broadcast. The walkthrough waits for mined receipts and check execution results. Intentional failures must return the expected OpenZeppelin custom error.
+A transaction ID means the transaction was broadcast. The walkthrough waits for mined receipts and checks execution results. Intentional failures must return the expected OpenZeppelin custom error.
 
 For token names in TronBox, use `items['name(uint256)'](0)`; the full signature avoids JavaScript's existing `name` property.
 
-## What this demonstrates
+## What the walkthrough verifies
 
-- `balanceOf(holder, id)` tracks balances separately for each ID.
-- `transfer(receiver, id, amount)` moves the caller's tokens.
-- `approve(spender, id, amount)` sets an allowance for one ID; `transferFrom(sender, receiver, id, amount)` spends it. A gold approval cannot move swords.
-- `setOperator(spender, true)` grants access to all the holder's IDs, without consuming per-token allowances. Revoking operator status leaves any separately granted allowances intact.
-- Decimals affect display only. All on-chain amounts are integers; this example treats swords as whole items, not individually unique NFTs.
+- A direct transfer moves 25 gold from A to B and updates both gold balances.
+- Approving two swords sets B's allowance to `2`.
+- B can spend one sword through `transferFrom`, leaving allowance `1`.
+- Attempting to spend two more swords reverts with `TRC6909InsufficientAllowance` and leaves sword balances and allowance unchanged.
+
+The script also reads starting balances, checks both wallets have test TRX, and confirms B is not A's operator before sending transactions. It does not test operator authorization/revocation, metadata, initial minting, interface detection, or unlimited allowances.
 
 As described in [OpenZeppelin's TRC-6909 guide](https://docs.openzeppelin.com/tron-contracts/trc6909), the base implementation omits batch operations and receiver callbacks. Transfers to contracts do not check whether the recipient can return the tokens. Metadata here provides names, symbols, and decimals; it does not provide content URIs or a `totalSupply` getter. Unconfigured IDs have default metadata and zero supply; they cannot acquire a positive balance because minting is limited to the constructor.
 
