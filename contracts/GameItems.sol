@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.31;
 
 import {TRC6909Metadata} from "@openzeppelin/tron-contracts/token/TRC6909/extensions/TRC6909Metadata.sol";
 

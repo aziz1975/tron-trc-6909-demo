@@ -50,7 +50,7 @@ All workflows target **Nile testnet** and need `npm ci` and `npm run compile` fi
 
 ## Set up Nile wallets
 
-Compilation uses **TRON Solidity 0.8.25**, with TronBox 4.11.0 and OpenZeppelin 5.6.0. Tests execute on the **TRON Virtual Machine** on Nile. The first setup downloads npm dependencies and the TRON Solidity compiler.
+Compilation uses **TRON Solidity 0.8.31**. Tests execute on Nile. The first setup downloads npm dependencies and the TRON Solidity compiler.
 
 1. Create two dedicated test wallets in TronLink and select Nile: a holder and a
    spender. Export their private keys locally; never share them or use mainnet keys.
@@ -59,8 +59,7 @@ Compilation uses **TRON Solidity 0.8.25**, with TronBox 4.11.0 and OpenZeppelin 
    different spender key. Both are 64 hexadecimal characters without `0x`.
    Configuration loads `.env` automatically. The configured RPC endpoint is
    `https://nile.trongrid.io`; the project does not configure an API key.
-3. Request test TRX for **both wallets' public addresses** at
-   <https://nileex.io/join/getJoinPage>. Confirm the balance on
+3. Request test TRX for both wallets. Confirm the balance on
    <https://nile.tronscan.org>. Each deployment and transaction consumes resources
    or test TRX. The configured fee limit is a per-transaction cap of 1,000 TRX,
    not an estimated fee.
@@ -108,13 +107,11 @@ The script reads the ABI from `build/contracts/GameItems.json` and uses the addr
 | 3 | B transfers `1` sword from A to B | A loses one sword; B gains one; allowance becomes `1` |
 | 4 | B attempts to transfer `2` more swords | Reverts with `TRC6909InsufficientAllowance`; balances and allowance stay unchanged |
 
-The script prints public addresses, transaction IDs, and `PASS` assertions. It polls mined receipts every three seconds for up to 180 seconds per transaction. Successful calls must report `SUCCESS`; the intentional failure must report `REVERT` with the expected decoded custom error. A broadcast transaction ID alone is not a passing result. The final success message is:
+The script prints public addresses, transaction IDs, and `PASS` assertions. Successful calls must report `SUCCESS`; the intentional failure must report `REVERT` with the expected decoded custom error. A broadcast transaction ID alone is not a passing result. The final success message is:
 
 ```text
 Both deployed Nile feature tests passed. B retains an allowance of one sword.
 ```
-
-Both wallets need test TRX, including for the deliberately reverted transaction.
 
 The script records current balances and checks exact changes, so it can run
 against an inventory you have already used. A needs at least 25 gold and three

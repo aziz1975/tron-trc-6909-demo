@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.31;
 
 /// @dev TronBox deployment bookkeeping, separate from the game inventory.
 contract Migrations {

@@ -16,7 +16,7 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: '0.8.25', // TronBox downloads the TRON Solidity compiler.
+      version: '0.8.31', // TronBox downloads the TRON Solidity compiler.
       settings: {
         optimizer: { enabled: true, runs: 200 },
         evmVersion: 'istanbul',
