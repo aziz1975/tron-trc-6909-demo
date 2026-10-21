@@ -2,7 +2,7 @@
 
 **TRC-6909 lets one smart contract manage multiple token types, each identified by a token ID.** Each account has a separate balance for each ID. A holder can approve a spender for a specific amount of one token, or authorize an operator to move any of their token types.
 
-This project uses [OpenZeppelin Contracts for TRON](https://docs.openzeppelin.com/tron-contracts/trc6909), pinned to `@openzeppelin/tron-contracts` **5.6.0**, to implement a game inventory containing gold and swords. Both assets share one contract address while keeping their balances, metadata, and per-token allowances separate.
+This project uses [OpenZeppelin Contracts for TRON](https://docs.openzeppelin.com/tron-contracts/trc6909), pinned to `@openzeppelin/tron-contracts`, to implement a game inventory containing gold and swords. Both assets share one contract address while keeping their balances, metadata, and per-token allowances separate.
 
 OpenZeppelin's `TRC6909` implements transfers, balances, allowances, operators, and TRC-165 interface detection. Its `TRC6909Metadata` extension adds a name, symbol, and decimals value for each ID. The application contract inherits these implementations and only configures its two tokens and initial supplies.
 
@@ -15,7 +15,7 @@ OpenZeppelin's `TRC6909` implements transfers, balances, allowances, operators, 
 | `0` | Gold | GOLD | 6 | 1,000 gold | `1000000000` |
 | `1` | Sword | SWORD | 0 | 10 swords | `10` |
 
-`GameItems` inherits `TRC6909Metadata`. Its constructor assigns both fixed supplies to `initialHolder`. OpenZeppelin supplies the balance, transfer, allowance, operator, and interface implementations. There are no public mint, burn, or metadata setters, so the example needs no administrator or access-control layer.
+`GameItems` inherits `TRC6909Metadata`. Its constructor assigns both fixed supplies to `initialHolder`. OpenZeppelin supplies the balance, transfer, allowance, operator, and interface implementations.
 
 ### Supply and decimals
 
