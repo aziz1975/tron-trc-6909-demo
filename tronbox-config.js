@@ -13,14 +13,6 @@ module.exports = {
       userFeePercentage: 100,
       feeLimit: 1_000 * 1_000_000,
     },
-    development: {
-      // Public TRE development key. Use only on the local, disposable chain.
-      privateKey: '0000000000000000000000000000000000000000000000000000000000000001',
-      fullHost: 'http://127.0.0.1:9090',
-      network_id: '9',
-      userFeePercentage: 100,
-      feeLimit: 1_000 * 1_000_000, // SUN; 1 TRX = 1,000,000 SUN.
-    },
   },
   compilers: {
     solc: {

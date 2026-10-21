@@ -9,15 +9,9 @@
   },
   "scripts": {
     "compile": "tronbox compile --compile-all",
-    "test": "tronbox test --network development",
-    "test:nile": "node scripts/test-nile.js",
     "test:nile:deployed": "node scripts/test-nile-deployed.js",
     "deploy:nile": "tronbox migrate --reset --network nile",
-    "console:nile": "tronbox console --network nile",
-    "deploy:local": "tronbox migrate --reset --network development",
-    "console": "tronbox console --network development",
-    "tre:start": "docker compose up -d --wait",
-    "tre:stop": "docker compose down"
+    "console:nile": "tronbox console --network nile"
   },
   "dependencies": {
     "@openzeppelin/tron-contracts": "5.6.0"

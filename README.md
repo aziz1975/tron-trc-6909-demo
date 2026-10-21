@@ -41,30 +41,14 @@ A finite allowance decreases when spent; the maximum `uint256` allowance remains
 
 | Goal | Command | Behavior |
 | --- | --- | --- |
-| Run the full suite locally | `npm test` | Uses local TRE and deploys fresh test inventories |
-| Run the full suite on Nile | `npm run test:nile` | Checks wallet configuration/funding, then runs 17 tests with fresh deployments |
 | Deploy an inventory on Nile | `npm run deploy:nile` | Runs reset migrations; creates a new inventory for manual use |
 | Exercise an existing Nile inventory | `npm run test:nile:deployed` | Uses the configured address; sends transfers and approvals without deploying |
 
-All workflows need `npm ci` and `npm run compile` first. Only local workflows require Docker.
+All workflows target **Nile testnet** and need `npm ci` and `npm run compile` first. Requirements: Node.js 22 or newer, npm, internet access, and funded Nile wallets.
 
-## Run locally
+## Set up Nile wallets
 
-Requirements: Node.js 22 or newer, npm, Docker, and Docker Compose v2 with `--wait` support. Port 9090 must be free. The first install needs internet access for dependencies and the TRON Solidity compiler.
-
-```sh
-npm ci
-npm run compile
-npm run tre:start
-npm test
-npm run deploy:local
-```
-
-`tre:start` starts a disposable [TronBox Runtime Environment (TRE)](https://tronbox.io/docs/guides/test-contracts) and waits for funded test accounts. Compilation uses **TRON Solidity 0.8.25**, and tests execute on the **TRON Virtual Machine**, using TronBox 4.11.0 and OpenZeppelin 5.6.0. Dependencies, the compiler version, and the TRE image digest are pinned for reproducibility.
-
-## Test on Nile
-
-Use Node.js 22 or newer. Docker is not required for Nile.
+Compilation uses **TRON Solidity 0.8.25**, with TronBox 4.11.0 and OpenZeppelin 5.6.0. Tests execute on the **TRON Virtual Machine** on Nile. The first setup downloads npm dependencies and the TRON Solidity compiler.
 
 1. Create two dedicated test wallets in TronLink and select Nile: a holder and a
    spender. Export their private keys locally; never share them or use mainnet keys.
@@ -79,24 +63,14 @@ Use Node.js 22 or newer. Docker is not required for Nile.
    or test TRX. The configured fee limit is a per-transaction cap of 1,000 TRX,
    not an estimated fee.
 4. Run `npm ci`, then `npm run compile`.
-5. Run `npm run test:nile`. Expect **17 passing** tests. The same suite runs locally
-   with `npm test`; it deploys a fresh inventory for every test. It checks balances,
-   metadata, direct and delegated transfers, finite/unlimited allowances, operator
-   permissions and revocation, events and return values, interface detection,
-   rollback after failures, and boundary cases. Failed transactions are intentional:
-   tests require the expected custom error and verify relevant state stays intact.
-   Public contract addresses and transaction IDs are printed for inspection in the
-   Nile explorer. The recipient is randomly generated and never signs; only the
-   holder and spender need TRX. Preflight checks key format, distinct wallets, and
-   nonzero TRX balances before TronBox starts migrations. Nonzero balances do not
-   guarantee enough resources for the full run; this suite makes many deployments
-   and transactions and may take several minutes. Refill either wallet as needed.
-6. Optionally run `npm run deploy:nile` to deploy a separate inventory for manual
-   use, then `npm run console:nile` to interact with it. Each reset deployment and
-   each test run creates new contracts and spends more test resources.
+5. If you need a new inventory, run `npm run deploy:nile`. Copy the printed
+   **GameItems** address into `CONTRACT_ADDRESS_NILE` in `.env`. Each reset
+   deployment creates new contracts and spends test resources. If you already
+   have a deployment, use its address instead.
+6. Run `npm run test:nile:deployed` to exercise that inventory as described below.
+   Use `npm run console:nile` for manual interaction.
 
-Do not run plain `npm test` for Nile: it targets the local TRE chain. Nile
-transactions can take longer; allow the command to finish. For insufficient
+Nile transactions can take time; allow the command to finish. For insufficient
 balance or energy errors, obtain more Nile TRX and retry. Never paste your `.env`
 contents into logs or support messages.
 
@@ -160,53 +134,18 @@ wallets during the test so the balance comparisons remain valid.
 | Insufficient balance or energy | Fund both signing wallets with Nile test TRX; a nonzero balance alone may not cover the run |
 | Walkthrough rejects starting balances | A needs at least 25 gold and three swords, and B must not already be A's operator |
 | RPC error or receipt timeout | Inspect the last transaction in the Nile explorer before retrying; it may have executed |
-| Local connection error | Start TRE with `npm run tre:start`; `npm test` uses localhost, not Nile |
 
-The fee limit in `tronbox-config.js` is `1000000000` SUN (1,000 TRX) per transaction. It is a cap, not a predicted fee. Neither Nile script automatically obtains test funds.
+The fee limit in `tronbox-config.js` is `1000000000` SUN (1,000 TRX) per transaction. It is a cap, not a predicted fee. The walkthrough does not automatically obtain test funds.
 
 ## Transfers and approvals
 
-The following calls illustrate the flow exercised by [the tests](test-support/game-items-suite.js). They run inside an async TronBox test callback, where `accounts` and `waitForTransactionReceipt` are provided by TronBox. This snippet uses the local TRE accounts; on Nile, the shared suite signs delegated calls explicitly with the spender key. Amounts are strings in the smallest token unit to avoid JavaScript number precision problems.
+See [scripts/test-nile-deployed.js](scripts/test-nile-deployed.js) for the standalone TronWeb walkthrough. It signs holder calls with `PRIVATE_KEY_NILE` and delegated calls with `PRIVATE_KEY_NILE_SPENDER`. The spender is also the recipient.
 
-```js
-const GameItems = artifacts.require('GameItems');
-const items = await GameItems.deployed();
-const [holder, player, spender] = accounts;
+Amounts are passed as strings in the smallest token unit. For example, transferring 25 gold uses `transfer(receiver, 0, '25000000')`; approving two swords uses `approve(spender, 1, '2')`. Delegated transfers use `transferFrom(holder, receiver, id, amount)`. The contract also supports operator access through `setOperator(spender, true)` and revocation through `setOperator(spender, false)`. The walkthrough does not test these calls; it requires the spender to start without operator access.
 
-// 25 gold = 25 * 10^6 units; wait for execution before reading the balance.
-let txId = await items.transfer(player, 0, '25000000', { from: holder });
-await waitForTransactionReceipt(txId);
-(await items.balanceOf(player, 0)).toString(); // '25000000'
-
-// Permit a spender to transfer at most two swords.
-txId = await items.approve(spender, 1, '2', { from: holder });
-await waitForTransactionReceipt(txId);
-txId = await items.transferFrom(holder, player, 1, '1', { from: spender });
-await waitForTransactionReceipt(txId);
-(await items.allowance(holder, spender, 1)).toString(); // '1'
-
-// Revoke the remaining sword allowance.
-txId = await items.approve(spender, 1, '0', { from: holder });
-await waitForTransactionReceipt(txId);
-
-// Alternatively, authorize a spender for every token ID, then revoke it.
-txId = await items.setOperator(spender, true, { from: holder });
-await waitForTransactionReceipt(txId);
-txId = await items.setOperator(spender, false, { from: holder });
-await waitForTransactionReceipt(txId);
-```
-
-A transaction ID means the transaction was broadcast. If `transactionInfo` is the result returned by `waitForTransactionReceipt(txId)`, check that `transactionInfo.receipt.result` is `SUCCESS`. The test helper also decodes OpenZeppelin custom errors for reverted transactions.
+A transaction ID means the transaction was broadcast. The walkthrough waits for mined receipts and check execution results. Intentional failures must return the expected OpenZeppelin custom error.
 
 For token names in TronBox, use `items['name(uint256)'](0)`; the full signature avoids JavaScript's existing `name` property.
-
-Stop the local chain when finished:
-
-```sh
-npm run tre:stop
-```
-
-Stopping TRE discards its chain state. Start it again and redeploy before interacting with the contract. `deploy:local` uses `--reset` and creates fresh contracts each time.
 
 ## What this demonstrates
 
@@ -228,14 +167,8 @@ migrations/
   1_initial_migration.js        Deploys Migrations
   2_deploy_game_items.js        Deploys GameItems to the configured holder
 scripts/
-  test-nile.js                  Key/funding preflight and full Nile test runner
   test-nile-deployed.js         Transfer/allowance walkthrough on an existing deployment
-test/game-items.test.js         Local suite entry point
-nile-test/game-items.test.js    Nile suite entry point
-test-support/game-items-suite.js
-                               Shared 17-test TVM behavior suite
-tronbox-config.js               Local/Nile networks and TRON compiler settings
-compose.yaml                   Pinned disposable local TRON runtime
+tronbox-config.js               Nile network and TRON compiler settings
 .env.sample                    Nile wallet and contract-address template
 .nvmrc                         Node.js version for nvm
 package.json                   Dependencies and npm commands
@@ -245,8 +178,8 @@ build/                         Generated artifacts and deployment records (gitig
 
 `Migrations.sol` records completed migrations for TronBox; it is separate from the inventory and does not control token permissions. The ignored `.env` contains local wallet configuration. `node_modules/` and compiler output are generated locally and excluded from version control.
 
-Use the tests as interaction examples: each test deploys a fresh inventory, and assertions check mined receipts and balances. To extend the contract with ongoing minting, add an explicitly authorized function using OpenZeppelin's access-control contracts. Keep the dependency code unchanged. The npm overrides pin patched versions of transitive development dependencies reported by `npm audit`.
+Use the walkthrough as an interaction example: it checks mined receipts and balance changes against an existing inventory. To extend the contract with ongoing minting, add an explicitly authorized function using OpenZeppelin's access-control contracts. Keep the dependency code unchanged. The npm overrides pin patched versions of transitive development dependencies reported by `npm audit`.
 
-The committed private key is TRE's public development key and is only configured for localhost. This project is an educational example; the application contract has not been audited.
+This project is an educational example; the application contract has not been audited.
 
 MIT licensed. See [LICENSE](LICENSE).
