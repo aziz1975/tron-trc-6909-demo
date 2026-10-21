@@ -131,28 +131,6 @@ Both deployed Nile feature tests passed. B retains an allowance of one sword.
 | Walkthrough rejects starting balances | A needs at least 25 gold and three swords, and B must not already be A's operator |
 | RPC error or receipt timeout | Inspect the last transaction in the Nile explorer before retrying; it may have executed |
 
-The fee limit in `tronbox-config.js` is `1000000000` SUN (1,000 TRX) per transaction. It is a cap, not a predicted fee. The walkthrough does not automatically obtain test funds.
-
-## Transfers and approvals
-
-See [scripts/test-nile-deployed.js](scripts/test-nile-deployed.js) for the standalone TronWeb walkthrough. It signs holder calls with `PRIVATE_KEY_NILE` and delegated calls with `PRIVATE_KEY_NILE_SPENDER`. The spender is also the recipient.
-
-Amounts are passed as strings in the smallest token unit. For example, transferring 25 gold uses `transfer(receiver, 0, '25000000')`; approving two swords uses `approve(spender, 1, '2')`. Delegated transfers use `transferFrom(holder, receiver, id, amount)`.
-
-A transaction ID means the transaction was broadcast. The walkthrough waits for mined receipts and checks execution results. Intentional failures must return the expected OpenZeppelin custom error.
-
-For token names in TronBox, use `items['name(uint256)'](0)`; the full signature avoids JavaScript's existing `name` property.
-
-## What the walkthrough verifies
-
-- A direct transfer moves 25 gold from A to B and updates both gold balances.
-- Approving two swords sets B's allowance to `2`.
-- B can spend one sword through `transferFrom`, leaving allowance `1`.
-- Attempting to spend two more swords reverts with `TRC6909InsufficientAllowance` and leaves sword balances and allowance unchanged.
-
-The script also reads starting balances, checks both wallets have test TRX, and confirms B is not A's operator before sending transactions. It does not test operator authorization/revocation, metadata, initial minting, interface detection, or unlimited allowances.
-
-As described in [OpenZeppelin's TRC-6909 guide](https://docs.openzeppelin.com/tron-contracts/trc6909), the base implementation omits batch operations and receiver callbacks. Transfers to contracts do not check whether the recipient can return the tokens. Metadata here provides names, symbols, and decimals; it does not provide content URIs or a `totalSupply` getter. Unconfigured IDs have default metadata and zero supply; they cannot acquire a positive balance because minting is limited to the constructor.
 
 ## Project layout
 
@@ -172,10 +150,6 @@ package.json                   Dependencies and npm commands
 package-lock.json              Locked dependency tree
 build/                         Generated artifacts and deployment records (gitignored)
 ```
-
-`Migrations.sol` records completed migrations for TronBox; it is separate from the inventory and does not control token permissions. The ignored `.env` contains local wallet configuration. `node_modules/` and compiler output are generated locally and excluded from version control.
-
-Use the walkthrough as an interaction example: it checks mined receipts and balance changes against an existing inventory. To extend the contract with ongoing minting, add an explicitly authorized function using OpenZeppelin's access-control contracts. Keep the dependency code unchanged. The npm overrides pin patched versions of transitive development dependencies reported by `npm audit`.
 
 This project is an educational example; the application contract has not been audited.
 
