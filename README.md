@@ -113,15 +113,12 @@ The script prints public addresses, transaction IDs, and `PASS` assertions. Succ
 Both deployed Nile feature tests passed. B retains an allowance of one sword.
 ```
 
-The script records current balances and checks exact changes, so it can run
-against an inventory you have already used. A needs at least 25 gold and three
-swords, and B must not already be an operator for A. These checks run before
-any writes. Each successful run moves 25 gold and one sword from A to B and
-replaces B's sword allowance with two, then spends one. B retains permission to
-spend one more sword. You can rerun while A has sufficient balances.
-A partial failure leaves earlier successful transactions in place; inspect the
-last printed transaction before retrying. Avoid other transfers involving these
-wallets during the test so the balance comparisons remain valid.
+- The script records current balances and checks exact changes, so it can run against an inventory you have already used.
+- A needs at least 25 gold and three swords, and B must not already be an operator for A. These checks run before any writes.
+- Each successful run moves 25 gold and one sword from A to B and replaces B's sword allowance with two, then spends one.
+- B retains permission to spend one more sword. You can rerun while A has sufficient balances.
+- A partial failure leaves earlier successful transactions in place; inspect the last printed transaction before retrying.
+- Avoid other transfers involving these wallets during the test so the balance comparisons remain valid.
 
 ## Nile troubleshooting
 
