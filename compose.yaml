@@ -1,0 +1,16 @@
+services:
+  tre:
+    # Pin the runtime for reproducible local TVM tests.
+    image: tronbox/tre@sha256:bd10340fd2770739a43645f505384000d7946cf82a862f99c26638a6bb06b56f
+    ports:
+      - "127.0.0.1:9090:9090"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:9090/admin/accounts-json', r => { let body = ''; r.on('data', c => body += c); r.on('end', () => { try { const data = JSON.parse(body); const keys = Array.isArray(data) ? data : data.privateKeys; process.exit(r.statusCode === 200 && keys.length >= 3 ? 0 : 1); } catch { process.exit(1); } }); }).on('error', () => process.exit(1));"
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s

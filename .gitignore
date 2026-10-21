@@ -1,0 +1,9 @@
+node_modules/
+build/
+.env
+.env.*
+!.env.example
+!.env.sample
+*.log
+.console_history
+.DS_Store

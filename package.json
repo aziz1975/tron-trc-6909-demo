@@ -1,0 +1,35 @@
+{
+  "name": "tron-trc-6909-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A minimal TRC-6909 game inventory using OpenZeppelin Contracts for TRON.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "compile": "tronbox compile --compile-all",
+    "test": "tronbox test --network development",
+    "test:nile": "node scripts/test-nile.js",
+    "test:nile:deployed": "node scripts/test-nile-deployed.js",
+    "deploy:nile": "tronbox migrate --reset --network nile",
+    "console:nile": "tronbox console --network nile",
+    "deploy:local": "tronbox migrate --reset --network development",
+    "console": "tronbox console --network development",
+    "tre:start": "docker compose up -d --wait",
+    "tre:stop": "docker compose down"
+  },
+  "dependencies": {
+    "@openzeppelin/tron-contracts": "5.6.0"
+  },
+  "devDependencies": {
+    "ethers": "6.17.0",
+    "tronbox": "4.11.0"
+  },
+  "overrides": {
+    "axios": "1.20.0",
+    "diff": "8.0.3",
+    "serialize-javascript": "7.0.5",
+    "ws": "8.21.0"
+  }
+}
